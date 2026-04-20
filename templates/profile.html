@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>News Aggregator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: linear-gradient(135deg,#220bf5,#5f9cff);
+    color:white;
+}
+
+.glass {
+    background: rgb(8, 4, 241);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar bg-dark p-3">
+<a href="/" class="navbar-brand text-white mx-auto"> Profiles</a>
+</nav>
+
+<div class="container mt-5">
+<div class="glass mx-auto" style="max-width:500px;">
+
+<h3 class="text-center mb-3">Profile</h3>
+
+<form method="POST" enctype="multipart/form-data">
+
+    <!-- IMAGE -->
+    <div class="text-center mb-3">
+        <img src="{{ user.image if user and user.image else '/static/images/user.png' }}" 
+             width="100" height="100" class="rounded-circle mb-2"
+             style="cursor:pointer;"
+             onclick="document.querySelector('input[name=image]').click()">
+        
+        <input type="file" name="image" hidden accept="image/*" onchange="this.form.submit()">
+    </div>
+
+    <input type="text" name="username" 
+           value="{{ user.username if user else '' }}" 
+           class="form-control mb-2" 
+           placeholder="Username">
+
+    <input type="password" name="password" 
+           class="form-control mb-2" 
+           placeholder="New Password (leave blank to keep current)">
+
+    <button type="submit" class="btn btn-light w-100">Update Profile</button>
+
+</form>
+
+<a href="/" class="btn btn-outline-light w-100 mt-3">Back Home</a>
+
+</div>
+</div>
+
+</body>
+</html>

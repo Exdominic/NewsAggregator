@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>News Aggregator</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body style="background-color: #0000FF; color: white;">
+
+<!-- 🔵 TOP HEADER -->
+<nav class="navbar navbar-dark px-3" style="background-color: #00FF00;">
+    <div class="container-fluid position-relative d-flex justify-content-center">
+        <span class="navbar-brand mb-0 h1" style="color: black;">Admin Dashboard</span>
+        <a href="/" class="btn btn-outline-dark position-absolute start-0 ms-3">Home</a>
+        <a href="/logout" class="btn btn-outline-dark position-absolute end-0 me-3">Logout</a>
+    </div>
+</nav>
+
+<div class="container mt-5">
+
+<!-- STATS -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white p-3">
+            <h4>Total Users</h4>
+            <h2>{{ total_users }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card bg-success text-white p-3">
+            <h4>Total Saved News</h4>
+            <h2>{{ total_favorites }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- USERS TABLE -->
+<h4 class="mb-3">All Users</h4>
+
+<table class="table table-dark table-bordered">
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Role</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody>
+{% for u in users %}
+<tr>
+<td>{{ u.username }}</td>
+<td>{{ u.email }}</td>
+<td>{{ u.role }}</td>
+
+<td>
+    {% if u.role != "admin" %}
+    <a href="/delete_user/{{ u.email }}" 
+       class="btn btn-danger btn-sm"
+       onclick="return confirm('Delete this user?')">
+       Delete
+    </a>
+    {% else %}
+    <span class="text-warning">Admin</span>
+    {% endif %}
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<a href="/report_pdf" class="btn btn-dark">Print</a>
+
+
+{% for n in news %}
+<div class="card mb-3 p-2">
+
+    <b>{{ n.title }}</b><br>
+    👤 {{ n.user }} <br>
+
+    👍 {{ n.likes or 0 }} |
+    👎 {{ n.dislikes or 0 }} |
+    💬 {{ n.comments|length if n.comments else 0 }}
+
+    <form method="POST" action="/delete_notification">
+        <input type="hidden" name="id" value="{{ n._id }}">
+        <button class="btn btn-danger btn-sm mt-2">Delete</button>
+    </form>
+
+</div>
+{% endfor %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<canvas id="myChart"></canvas>
+<canvas id="categoryChart"></canvas>
+<canvas id="reactionChart"></canvas>
+<canvas id="statsChart"></canvas>
+<canvas id="liveChart"></canvas>
+
+<script>
+fetch("/admin_stats")
+.then(res => res.json())
+.then(data => {
+
+    new Chart(document.getElementById("myChart"), {
+        type: 'bar',
+        data: {
+            labels: ["Users", "Favorites"],
+            datasets: [{
+                label: "System Stats",
+                data: [data.users, data.favorites],
+                borderWidth: 3,
+                borderColor: 'white',
+                backgroundColor: ['#007bff', '#28a745']
+            }]
+        },
+        options: {
+            animation: {
+                duration: 1500
+            },
+            plugins: {
+                legend: {
+                    labels: { color: 'white', font: { weight: 'bold' } }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: { color: 'white', font: { weight: 'bold' } },
+                    grid: { color: 'rgba(255,255,255,0.2)', lineWidth: 2 }
+                },
+                x: {
+                    ticks: { color: 'white', font: { weight: 'bold' } },
+                    grid: { color: 'rgba(255,255,255,0.2)', lineWidth: 2 }
+                }
+            }
+        }
+    });
+
+});
+</script>
+
+<script>
+const ctx = document.getElementById('liveChart');
+
+const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Users', 'Favorites'],
+        datasets: [{
+            label: 'Live Stats',
+            data: [0, 0],
+            borderWidth: 3,
+            borderColor: 'white',
+            backgroundColor: ['#007bff', '#28a745']
+        }]
+    },
+    options: {
+        plugins: {
+            legend: {
+                labels: { color: 'white', font: { weight: 'bold' } }
+            }
+        },
+        scales: {
+            y: {
+                ticks: { color: 'white', font: { weight: 'bold' } },
+                grid: { color: 'rgba(255,255,255,0.2)', lineWidth: 2 }
+            },
+            x: {
+                ticks: { color: 'white', font: { weight: 'bold' } },
+                grid: { color: 'rgba(255,255,255,0.2)', lineWidth: 2 }
+            }
+        }
+    }
+});
+
+const socket = io();
+
+socket.on("admin_stats", function(data) {
+    chart.data.datasets[0].data = [data.users, data.favorites];
+    chart.update();
+});
+</script>
+
+<script>
+async function loadAnalytics(){
+    const res = await fetch('/analytics');
+    const data = await res.json();
+
+    // CATEGORY CHART
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'bar',
+        data: {
+            labels: data.categories.map(c => c._id),
+            datasets: [{
+                label: 'Top Categories',
+                data: data.categories.map(c => c.count),
+                borderWidth: 3,
+                borderColor: 'white',
+                backgroundColor: '#17a2b8'
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: { color: 'white', font: { weight: 'bold' } }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: { color: 'white', font: { weight: 'bold' } },
+                    grid: { color: 'rgba(255,255,255,0.2)', lineWidth: 2 }
+                },
+                x: {
+                    ticks: { color: 'white', font: { weight: 'bold' } },
+                    grid: { color: 'rgba(255,255,255,0.2)', lineWidth: 2 }
+                }
+            }
+        }
+    });
+
+    // REACTION CHART
+    new Chart(document.getElementById('reactionChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Likes', 'Dislikes', 'Comments'],
+            datasets: [{
+                data: [data.likes, data.dislikes, data.comments],
+                borderWidth: 3,
+                borderColor: 'white',
+                backgroundColor: ['#28a745', '#dc3545', '#ffc107']
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: { color: 'white', font: { weight: 'bold' } }
+                }
+            }
+        }
+    });
+}
+
+loadAnalytics();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>News Aggregator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #220bf5, #5f9cff);
+            color: white;
+        }
+
+        .navbar {
+            background-color: #212529;
+            padding: 15px 0;
+        }
+
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: bold;
+            font-size: 28px;
+        }
+
+        .glass {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .section {
+            margin-top: 60px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            border-radius: 15px;
+        }
+
+        .card img {
+            border-radius: 50%;
+            height: 100px;
+            width: 100px;
+            object-fit: cover;
+            margin: 15px auto;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container d-flex justify-content-between align-items-center">
+
+        <!-- Center Title -->
+        <div class="mx-auto position-absolute start-50 translate-middle-x">
+            <a class="navbar-brand text-white" href="/"><b> About Us</b></a>
+        </div>
+
+        <!-- Right -->
+        <div class="ms-auto">
+            {% if session.get('user') %}
+            <div class="d-flex align-items-center">
+
+                <a href="/" class="btn btn-outline-light me-2"> Home</a>
+
+                <div class="dropdown">
+                    <a class="d-flex align-items-center text-decoration-none text-white dropdown-toggle"
+                       href="#" data-bs-toggle="dropdown">
+                        <img src="{{ user.image if user.image else '/static/images/user.png' }}"
+                         width="40px" height="40px" class="rounded-circle me-2">
+                        <span>Hi, {{ session.user }}</span>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><a class="dropdown-item" href="/about">About Us</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</nav>
+
+<!-- HERO -->
+<div class="container section text-center">
+    <div class="glass">
+        <h1> AI Personalized News</h1>
+        <p class="mt-3">
+            Your smart news platform that learns what you love and delivers it instantly.
+        </p>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<div class="container section">
+    <h2 class="text-center mb-4">Features</h2>
+
+    <div class="row text-center">
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5> AI Personalization</h5>
+                <p>News tailored based on your interests.</p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Secure Login</h5>
+                <p>Authentication system with encrypted passwords.</p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Save Articles</h5>
+                <p>Bookmark your favorite news easily.</p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5> Global News</h5>
+                <p>Access news from all around the world.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TEAM -->
+<div class="container section">
+    <h2 class="text-center mb-4">SILICONS GROUP</h2>
+
+    <div class="row text-center">
+        
+
+        {% set roles = ["Developer", "Artificial Intelligent Engineer", "Designer"] %}
+
+        {% for role in roles %}
+        <div class="col-md-4">
+            <div class="card p-3">
+
+                {% set member = (team | selectattr("role","equalto",role) | list | first) %}
+                
+
+                <img src="{{ member.image if member else '/static/images/user.png' }}"
+                     style="height:200px;object-fit:cover;cursor:pointer;"
+                     {% if session.role == "admin" %}
+                     onclick="document.getElementById('file-{{ loop.index }}').click()">
+                     {% endif %}
+
+
+                <h5>{{ role }}</h5>
+                <p>
+                    {% if role == "Developer" %}Full Stack Engineer{% endif %}
+                    {% if role == "Artificial Intelligent Engineer" %}Machine Learning Specialist{% endif %}
+                    {% if role == "Designer" %}UI/UX Specialist{% endif %}
+                </p>
+
+                <!-- HIDDEN FORM -->
+                <form method="POST" action="/upload_team" enctype="multipart/form-data">
+                    <input type="hidden" name="role" value="{{ role }}">
+                    <input type="file" id="file-{{ loop.index }}" name="image" hidden
+                           onchange="this.form.submit()">
+                </form>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- CONTACT -->
+<div class="container section text-center">
+    <h2>Contact Us</h2>
+
+    <div class="glass mt-3">
+        <form id="contactForm">
+            <input type="text" name="name" class="form-control mb-2" placeholder="Your Name" required>
+            <input type="email" name="email" class="form-control mb-2" placeholder="Your Email" required>
+            <textarea name="message" class="form-control mb-2" placeholder="Your Message" required></textarea>
+            <button class="btn btn-light w-100">Send Message</button>
+        </form>
+    </div>
+</div>
+
+<footer class="text-center mt-5 p-3">
+    © 2026 News Aggregator
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$("#contactForm").submit(function(e){
+    e.preventDefault();
+
+    $.post("/contact", $(this).serialize())
+    .done(function(){
+        alert(" Message sent sent successfully!");
+        $("#contactForm")[0].reset();
+    });
+});
+</script>
+
+</body>
+</html>
